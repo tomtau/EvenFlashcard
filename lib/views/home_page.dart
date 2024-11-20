@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:demo_ai_even/ble_manager.dart';
 import 'package:demo_ai_even/services/evenai.dart';
 import 'package:demo_ai_even/views/even_list_page.dart';
+import 'package:demo_ai_even/views/features_page.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 
 class HomePage extends StatefulWidget {
@@ -13,7 +15,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   Timer? scanTimer;
   bool isScanning = false;
-
+ 
   @override
   void initState() {
     super.initState();
@@ -91,9 +93,24 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Even AI Demo'),
-        backgroundColor: Colors.white.withOpacity(0.8),
+        actions: [
+          InkWell(
+            onTap: () {
+              print("To Features Page...");
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => FeaturesPage()),
+              );
+            },
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+            child: const Padding(
+              padding: EdgeInsets.only(
+                left: 16, top: 12, bottom: 14, right: 16),
+                child: Icon(Icons.menu))
+          ),
+        ]
       ),
-      backgroundColor: Colors.white.withOpacity(0.9),
       body: Padding(padding: EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 44), 
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -148,6 +165,7 @@ class _HomePageState extends State<HomePage> {
                               : Text(
                                   snapshot.data ?? "Loading...",
                                   style: TextStyle(fontSize: 14, color: BleManager.get().isConnected ? Colors.black : Colors.grey.withOpacity(0.5)),
+                                  textAlign: TextAlign.center,
                                 );
                               }
                           );
@@ -155,10 +173,18 @@ class _HomePageState extends State<HomePage> {
                     )
                   ),
                 ),
-              )
+              ),
           ],
         ),
       ),
+      /*
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          String sn = await Proto.getLegSn(Proto.lR());
+          print("sn----------------$sn"); 
+        },
+        child: Text("SN"),
+      ),*/
     );
   }
 

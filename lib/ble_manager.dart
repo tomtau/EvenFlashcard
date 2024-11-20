@@ -99,10 +99,19 @@ class BleManager {
     startSendBeatHeart();
   }
 
-  void startSendBeatHeart() {
+  int tryTime = 0;
+  void startSendBeatHeart() async {
     beatHeartTimer?.cancel();
-    beatHeartTimer = Timer.periodic(Duration(seconds: 8), (timer) {
-      Proto.sendHeartBeat();
+    beatHeartTimer = null;
+
+    beatHeartTimer = Timer.periodic(Duration(seconds: 8), (timer) async {
+      bool isSuccess = await Proto.sendHeartBeat();
+      if (!isSuccess && tryTime < 2) {
+        tryTime++;
+        await Proto.sendHeartBeat();
+      } else {
+        tryTime = 0;
+      }
     });
   }
 
@@ -225,7 +234,6 @@ class BleManager {
       if (!ret.isTimeout) {
         return ret;
       }
-      //  断连就不继续请求了
       if (!BleManager.isBothConnected()) {
         break;
       }
@@ -280,7 +288,6 @@ class BleManager {
       ret = await BleManager.invokeMethod(methodSend, params);
       return ret;
     } else {
-      //双边通信先发从后发主。
       params["lr"] = "L"; // get().slave; 
       var ret = await _channel
           .invokeMethod(methodSend, params); //ret is true or false or null
