@@ -36,8 +36,8 @@ class BmpUpdateManager {
 
       
       final pack = multiPacks[index];  
-      // address in glasses [0x00, 0x1f, 0x80, 0x00] , taken in the first package
-      Uint8List data = index == 0 ? Utils.addPrefixToUint8List([0x15, index & 0xff, 0x00, 0x1f, 0x80, 0x00],  pack) : Utils.addPrefixToUint8List([0x15, index & 0xff], pack);
+      // address in glasses [0x00, 0x1c, 0x00, 0x00] , taken in the first package
+      Uint8List data = index == 0 ? Utils.addPrefixToUint8List([0x15, index & 0xff, 0x00, 0x1c, 0x00, 0x00],  pack) : Utils.addPrefixToUint8List([0x15, index & 0xff], pack);
       print("${DateTime.now()} updateBmp----data---*${data.length}---*$data----------");
 
       await BleManager.sendData(
@@ -128,7 +128,7 @@ class BmpUpdateManager {
 
   Uint8List prependAddress(Uint8List image) {
 
-    List<int> addressBytes = [0x00, 0x1f, 0x80, 0x00];
+    List<int> addressBytes = [0x00, 0x1c, 0x00, 0x00];
     Uint8List newImage = Uint8List(addressBytes.length + image.length);
     newImage.setRange(0, addressBytes.length, addressBytes);
     newImage.setRange(addressBytes.length, newImage.length, image);

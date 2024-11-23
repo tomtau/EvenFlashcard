@@ -19,7 +19,7 @@ TouchBar for page-down. A double-tap on the TouchBar will directly exit the Even
 ## Image Sending
 Image transmission currently supports 1-bit, 576*136 pixel BMP images (refer to image_1.bmp, image_2.bmp in the project). 
 The core process includes three steps: 
-- 1. Divide the BMP image data into packets (each packet is 194 bytes), then add 0x15 command and syncID to the front of the packet, and send it to the dual BLE in the order of the packets (the left and right sides can be sent independently at the same time). The first packet needs to insert 4 bytes of glasses end storage address 0x00, 0x1f, 0x80, 0x00, so the first packet data is ([0x15, index & 0xff, 0x00, 0x1f, 0x80, 0x00], pack), and other packets do not need addresses 0x00, 0x1f, 0x80, 0x00;
+- 1. Divide the BMP image data into packets (each packet is 194 bytes), then add 0x15 command and syncID to the front of the packet, and send it to the dual BLE in the order of the packets (the left and right sides can be sent independently at the same time). The first packet needs to insert 4 bytes of glasses end storage address 0x00, 0x1c, 0x00, 0x00, so the first packet data is ([0x15, index & 0xff, 0x00, 0x1c, 0x00, 0x00], pack), and other packets do not need addresses 0x00, 0x1c, 0x00, 0x00;
 - 2. After sending the last packet, it is necessary to send the packet end command [0x20, 0x0d, 0x0e] to the dual BLE;
 - 3. After the packet end command in step 2 is correctly replied, send the CRC check command to the dual BLE through the 0x16 command. When calculating the CRC, it is necessary to consider the glasses end storage address added when sending the first BMP packet.
      
@@ -142,7 +142,7 @@ mode.
 #### Command Information 
  - Command: 0x15
  - seq (Sequence Number): 0~255
- - address: [0x00, 0x1f, 0x80, 0x00]
+ - address: [0x00, 0x1c, 0x00, 0x00]
  - data0 ~ data194 
 #### Field Descriptions 
  - seq (Sequence Number): 
