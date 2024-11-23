@@ -70,8 +70,8 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
 
         currentConnectingDeviceName = deviceName // Save the current device being connected
 
-        centralManager.connect(leftPeripheral, options: nil) // Connect to left device
-        centralManager.connect(rightPeripheral, options: nil) // Connect to right device
+        centralManager.connect(leftPeripheral, options: [CBConnectPeripheralOptionNotifyOnDisconnectionKey: true]) //   options nil
+        centralManager.connect(rightPeripheral, options: [CBConnectPeripheralOptionNotifyOnDisconnectionKey: true]) //   options nil
 
         result("Connecting to \(deviceName)...")
     }
@@ -154,7 +154,15 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     }
     
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?){
-        print("didDisconnectPeripheral-----peripheral-----\(peripheral)--")
+        print("\(Date()) didDisconnectPeripheral-----peripheral-----\(peripheral)--")
+        
+        if let error = error {
+            print("Disconnect error: \(error.localizedDescription)")
+        } else {
+            print("Disconnected without error.")
+        }
+        
+        central.connect(peripheral, options: nil)
     }
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
@@ -262,20 +270,20 @@ class BluetoothManager: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
         guard error == nil else {
-            print("didWriteValueFor----characteristic---\(characteristic)---- \(error!)")
+            print("\(Date()) didWriteValueFor----characteristic---\(characteristic)---- \(error!)")
             return
         }
     }
     
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor descriptor: CBDescriptor, error: Error?) {
         guard error == nil else {
-            print("didWriteValueFor----------- \(error!)")
+            print("\(Date()) didWriteValueFor----------- \(error!)")
             return
         }
     }
 
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        //print("didUpdateValueFor--------peripheral-----\(peripheral.identifier.uuidString)--characteristic.value----\(characteristic.value)--")
+        //print("\(Date()) didUpdateValueFor------\(peripheral.identifier.uuidString)----\(peripheral.name)-----\(characteristic.value)--")
         let data = characteristic.value
         self.getCommandValue(data: data!,cbPeripheral: peripheral)
     }

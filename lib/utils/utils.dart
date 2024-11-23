@@ -1,5 +1,6 @@
 
-import 'dart:typed_data';
+import 'package:flutter/services.dart';
+
 
 class Utils {
   Utils._();
@@ -27,5 +28,15 @@ class Utils {
         data.map((byte) => byte.toRadixString(16).padLeft(2, '0')).toList();
     String hexResult = hexList.join(join);
     return hexResult;
+  }
+
+  static Future<Uint8List> loadBmpImage(String imageUrl) async {
+    try {
+      final ByteData data = await rootBundle.load(imageUrl);
+      return data.buffer.asUint8List();
+    } catch (e) {
+      print("Error loading BMP file: $e");
+      return Uint8List(0);
+    }
   }
 }

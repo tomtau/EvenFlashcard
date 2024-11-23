@@ -17,6 +17,8 @@ class _EvenAIListPageState extends State<EvenAIListPage> {
   void initState() {
     super.initState();
     controller = Get.find<EvenaiModelController>();
+
+    print("controller.items--------${controller.items.length}");
   }
 
   @override

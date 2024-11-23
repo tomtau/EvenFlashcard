@@ -87,15 +87,64 @@ class Proto {
     _beatHeartSeq++;
    
     print('${DateTime.now()} sendHeartBeat--------data---$data--');
-    var ret = await BleManager.request(data, timeoutMs: 1000); 
+    var ret = await BleManager.request(data, lr: "L", timeoutMs: 1500);
+
     print(
-        '${DateTime.now()} sendHeartBeat--------ret---${ret.data}--');
+        '${DateTime.now()} sendHeartBeat----L----ret---${ret.data}--');
     if (ret.isTimeout) {
       return false;
     } else if (ret.data[0].toInt() == 0x25 &&
         ret.data.length > 5 &&
         ret.data[4].toInt() == 0x04) {
+
+       var retR = await BleManager.request(data, lr: "R", timeoutMs: 1500);
+       print(
+        '${DateTime.now()} sendHeartBeat----R----retR---${retR.data}--');
+       if (retR.isTimeout) {
+        return false;
+       } else if (retR.data[0].toInt() == 0x25 &&
+        retR.data.length > 5 &&
+        retR.data[4].toInt() == 0x04) {
+          return true;
+       } else {
+        return false;
+       }
+    } else {
+      return false;
+    }
+  }
+
+  static Future<String> getLegSn(String lr) async {
+    var cmd = Uint8List.fromList([0x34]);
+    var resp = await BleManager.request(cmd, lr: lr);
+    var sn = String.fromCharCodes(resp.data.sublist(2, 18).toList());
+    return sn;
+  }
+
+  // tell the glasses to exit function to dashboard
+  static Future<bool> exit() async {
+    print("send exit all func");
+    var data = Uint8List.fromList([0x18]);
+
+    var retL =  await BleManager.request(data, lr: "L", timeoutMs: 1500);
+    print(
+        '${DateTime.now()} exit----L----ret---${retL.data}--');
+    if (retL.isTimeout) {
+      return false;
+    } else if (retL.data.isNotEmpty &&
+      retL.data[1].toInt() == 0xc9) {
+
+       var retR = await BleManager.request(data, lr: "R", timeoutMs: 1500);
+       print(
+        '${DateTime.now()} exit----R----retR---${retR.data}--');
+       if (retR.isTimeout) {
+        return false;
+       } else if (retR.data.isNotEmpty &&
+        retR.data[1].toInt() == 0xc9) {
       return true;
+       } else {
+        return false;
+       }
     } else {
       return false;
     }
