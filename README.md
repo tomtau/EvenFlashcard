@@ -39,6 +39,21 @@ maximum width is 488 pixels, with eac
 
 
 ## Protocol
+### TouchBar Events
+#### Single Tap
+ - 0xf5 0x01
+ - When checking the dashboard, you can flip to the next QuickNote by tapping the right TouchBar. Or you can read the detail of your unread notifications by tapping the left TouchBar.
+ - In the teleprompting or evenai features, forward/back the page by tapping the right/left TouchBar.
+
+#### Double Tap
+ - 0xf5 0x00
+ - Close the features or turn off display details.
+
+#### Triple Tap
+ - 0xf5 0x04/0x05
+ - Toggle Silent Mode.
+
+
 ### Start Even AI 
 #### Command Information 
  - Command: 0xF5
