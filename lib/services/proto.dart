@@ -6,7 +6,6 @@ import 'package:demo_ai_even/services/evenai_proto.dart';
 import 'package:demo_ai_even/utils/utils.dart';
 
 class Proto {
-
   static String lR() {
     // todo
     if (BleManager.isBothConnected()) return "R";
@@ -77,7 +76,7 @@ class Proto {
   static Future<bool> sendHeartBeat() async {
     var length = 6;
     var data = Uint8List.fromList([
-      0x25, 
+      0x25,
       length & 0xff,
       (length >> 8) & 0xff,
       _beatHeartSeq % 0xff,
@@ -85,30 +84,28 @@ class Proto {
       _beatHeartSeq % 0xff //0xff,
     ]);
     _beatHeartSeq++;
-   
+
     print('${DateTime.now()} sendHeartBeat--------data---$data--');
     var ret = await BleManager.request(data, lr: "L", timeoutMs: 1500);
 
-    print(
-        '${DateTime.now()} sendHeartBeat----L----ret---${ret.data}--');
+    print('${DateTime.now()} sendHeartBeat----L----ret---${ret.data}--');
     if (ret.isTimeout) {
+      print('${DateTime.now()} sendHeartBeat----L----time out--');
       return false;
     } else if (ret.data[0].toInt() == 0x25 &&
         ret.data.length > 5 &&
         ret.data[4].toInt() == 0x04) {
-
-       var retR = await BleManager.request(data, lr: "R", timeoutMs: 1500);
-       print(
-        '${DateTime.now()} sendHeartBeat----R----retR---${retR.data}--');
-       if (retR.isTimeout) {
+      var retR = await BleManager.request(data, lr: "R", timeoutMs: 1500);
+      print('${DateTime.now()} sendHeartBeat----R----retR---${retR.data}--');
+      if (retR.isTimeout) {
         return false;
-       } else if (retR.data[0].toInt() == 0x25 &&
-        retR.data.length > 5 &&
-        retR.data[4].toInt() == 0x04) {
-          return true;
-       } else {
+      } else if (retR.data[0].toInt() == 0x25 &&
+          retR.data.length > 5 &&
+          retR.data[4].toInt() == 0x04) {
+        return true;
+      } else {
         return false;
-       }
+      }
     } else {
       return false;
     }
@@ -126,27 +123,101 @@ class Proto {
     print("send exit all func");
     var data = Uint8List.fromList([0x18]);
 
-    var retL =  await BleManager.request(data, lr: "L", timeoutMs: 1500);
-    print(
-        '${DateTime.now()} exit----L----ret---${retL.data}--');
+    var retL = await BleManager.request(data, lr: "L", timeoutMs: 1500);
+    print('${DateTime.now()} exit----L----ret---${retL.data}--');
     if (retL.isTimeout) {
       return false;
-    } else if (retL.data.isNotEmpty &&
-      retL.data[1].toInt() == 0xc9) {
-
-       var retR = await BleManager.request(data, lr: "R", timeoutMs: 1500);
-       print(
-        '${DateTime.now()} exit----R----retR---${retR.data}--');
-       if (retR.isTimeout) {
+    } else if (retL.data.isNotEmpty && retL.data[1].toInt() == 0xc9) {
+      var retR = await BleManager.request(data, lr: "R", timeoutMs: 1500);
+      print('${DateTime.now()} exit----R----retR---${retR.data}--');
+      if (retR.isTimeout) {
         return false;
-       } else if (retR.data.isNotEmpty &&
-        retR.data[1].toInt() == 0xc9) {
-      return true;
-       } else {
+      } else if (retR.data.isNotEmpty && retR.data[1].toInt() == 0xc9) {
+        return true;
+      } else {
         return false;
-       }
+      }
     } else {
       return false;
     }
+  }
+
+  static List<Uint8List> _getPackList(int cmd, Uint8List data,
+      {int count = 20}) {
+    final realCount = count - 3;
+    List<Uint8List> send = [];
+    int maxSeq = data.length ~/ realCount;
+    if (data.length % realCount > 0) {
+      maxSeq++;
+    }
+    for (var seq = 0; seq < maxSeq; seq++) {
+      var start = seq * realCount;
+      var end = start + realCount;
+      if (end > data.length) {
+        end = data.length;
+      }
+      var itemData = data.sublist(start, end);
+      var pack = Utils.addPrefixToUint8List([cmd, maxSeq, seq], itemData);
+      send.add(pack);
+    }
+    return send;
+  }
+
+  static Future<void> sendNewAppWhiteListJson(String whitelistJson) async {
+    print("proto -> sendNewAppWhiteListJson: whitelist = $whitelistJson");
+    final whitelistData = utf8.encode(whitelistJson);
+    //  2、转换为接口格式
+    final dataList = _getPackList(0x04, whitelistData, count: 180);
+    print(
+        "proto -> sendNewAppWhiteListJson: length = ${dataList.length}, dataList = $dataList");
+    for (var i = 0; i < 3; i++) {
+      final isSuccess =
+          await BleManager.requestList(dataList, timeoutMs: 300, lr: "L");
+      if (isSuccess) {
+        return;
+      }
+    }
+  }
+
+  /// 发送通知
+  ///
+  /// - app [Map] 通知消息数据
+  static Future<void> sendNotify(Map appData, int notifyId,
+      {int retry = 6}) async {
+    final notifyJson = jsonEncode({
+      "ncs_notification": appData,
+    });
+    final dataList =
+        _getNotifyPackList(0x4B, notifyId, utf8.encode(notifyJson));
+    print(
+        "proto -> sendNotify: notifyId = $notifyId, data length = ${dataList.length} , data = $dataList, app = $notifyJson");
+    for (var i = 0; i < retry; i++) {
+      final isSuccess =
+          await BleManager.requestList(dataList, timeoutMs: 1000, lr: "L");
+      if (isSuccess) {
+        return;
+      }
+    }
+  }
+
+  static List<Uint8List> _getNotifyPackList(
+      int cmd, int msgId, Uint8List data) {
+    List<Uint8List> send = [];
+    int maxSeq = data.length ~/ 176;
+    if (data.length % 176 > 0) {
+      maxSeq++;
+    }
+    for (var seq = 0; seq < maxSeq; seq++) {
+      var start = seq * 176;
+      var end = start + 176;
+      if (end > data.length) {
+        end = data.length;
+      }
+      var itemData = data.sublist(start, end);
+      var pack =
+          Utils.addPrefixToUint8List([cmd, msgId, maxSeq, seq], itemData);
+      send.add(pack);
+    }
+    return send;
   }
 }

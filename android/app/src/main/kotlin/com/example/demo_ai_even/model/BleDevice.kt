@@ -31,18 +31,19 @@ data class BleDevice(
 
     fun sendData(data: ByteArray): Boolean {
         if (gatt == null || writeCharacteristic == null) {
-            Log.e(BleManager.LOG_TAG, "Gatt or WriteCharacteristic is null")
+            Log.e(BleManager.LOG_TAG, "$name: Gatt or WriteCharacteristic is null")
             return false
         }
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 gatt!!.writeCharacteristic(writeCharacteristic!!, data, BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE)
+                true
+            } else {
+                gatt!!.writeCharacteristic(writeCharacteristic)
             }
-            true
         } catch (e: Exception) {
+            Log.e(BleManager.LOG_TAG, "$name: send $data error = $e")
             false
-        } finally {
-
         }
     }
 }

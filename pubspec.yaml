@@ -40,9 +40,10 @@ dependencies:
   dio: ^5.4.3+1
   # State Management
   get: ^4.6.6
-
   # crc
   crclib: ^3.0.0
+  # Toast - https://pub.dev/packages/fluttertoast
+  fluttertoast: ^8.2.8
 
 
 dev_dependencies:
