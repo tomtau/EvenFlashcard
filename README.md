@@ -16,6 +16,7 @@ transmitted automatically, page by page. During transmission, a single tap on th
 will switch to manual mode, with the left-side TouchBar used for page-up and the right-side 
 TouchBar for page-down. A double-tap on the TouchBar will directly exit the Even AI function.
 
+
 ## Image Sending
 Image transmission currently supports 1-bit, 576*136 pixel BMP images (refer to image_1.bmp, image_2.bmp in the project). 
 The core process includes three steps: 
@@ -26,6 +27,15 @@ The core process includes three steps:
 For a specific example, click the icon in the upper right corner of the App homepage to enter the Features page. The page contains three buttons: BMP 1, BMP 2, and Exit, which represent the transmission and display of picture 1, the transmission and display of picture 2, and the exit of picture transmission and display.
 
 
+## Text Sending
+Currently, the demo supports sending text directly to the glasses and displaying it.
+The core steps are as follows:
+- 1. Divide the input text into lines according to the actual display width of the glasses (the value in the demo is 488, which can be fine-tuned) and the font size you want (the value in the demo is 21, which can be customized);
+- 2. Combine the number of lines per screen (the value in the demo is 5) and the size limit of each ble packet to divide the text divided in step 1 into packets (5 lines are displayed per screen in the demo, the first three lines form one packet, and the last two lines form one packet);
+- 3. Use the Text Sending protocol in the protocol section below to send the multi-packet data in step 2 to the glasses by screen (a timer is used in the demo to send each screen of text in sequence).
+
+
+
 ## Instructions
 G1’s dual Bluetooth communication is unique, each arm corresponds to a separate BLE 
 connection. During communication, unless the protocol specifies sending data to only one 
@@ -34,6 +44,7 @@ side (e.g., microphone activation to the right), the app should:
 - Then send data to the right side after receiving a successful acknowledgment from the left. 
  Also, consider the glasses' display width limitation: during the Even AI function, the 
 maximum width is 488 pixels, with eac
+
 
 
 
@@ -183,6 +194,47 @@ mode.
 #### Field Descriptions 
  - crc:
    The crc check value calculated using Crc32Xz big endian, combined with the bmp picture storage address and picture data.
+
+
+### Text Sending 
+#### Command Information 
+ - Command: 0x4E
+ - seq (Sequence Number): 0~255
+ - total_package_num (Total Package Count): 1~255
+ - current_package_num (Current Package Number): 0~255
+ - newscreen (Screen Status) 
+#### Field Descriptions 
+ - seq (Sequence Number): 
+   - Range: 0~255
+   - Description: Indicates the sequence of the current package. 
+ - total_package_num (Total Package Count): 
+   - Range: 1~255
+   - Description: The total number of packages being sent in this transmission. 
+ - current_package_num (Current Package Number): 
+   - Range: 0~255 
+   - Description: The current package number within the total, starting from 0. 
+ - newscreen (Screen Status): 
+   - Composed of lower 4 bits and upper 4 bits to represent screen status and Even AI 
+mode. 
+   ##### Lower 4 Bits (Screen Action): 
+      - 0x01: Display new content
+ 
+   ##### Upper 4 Bits (Status): 
+      - 0x70: Text Show
+   
+   ##### Example:
+   - New content + Text Show state is represented as 0x71.
+- new_char_pos0 and new_char_pos1: 
+   - new_char_pos0: Higher 8 bits of the new character position. 
+   - new_char_pos1: Lower 8 bits of the new character position. 
+- current_page_num (Current Page Number): 
+   - Range: 0~255
+   - Description: Represents the current page number. 
+- max_page_num (Maximum Page Number): 
+   - Range: 1~255 
+   - Description: The total number of pages. 
+- data (Data): 
+   - Description: The actual data being transmitted in this package.
 
 
 
