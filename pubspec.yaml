@@ -44,6 +44,8 @@ dependencies:
   crclib: ^3.0.0
   # Toast - https://pub.dev/packages/fluttertoast
   fluttertoast: ^8.2.8
+  shared_preferences: ^2.3.4
+  fsrs: ^1.1.1
 
 
 dev_dependencies:

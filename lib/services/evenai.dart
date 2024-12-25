@@ -118,13 +118,12 @@ class EvenAI {
     });
   }
 
-  // 收到眼镜端Even AI录音结束指令
-  Future<void> recordOverByOS() async {
+  Future<String> recordText() async {
     print('${DateTime.now()} EvenAI -------recordOverByOS-------');
 
     int currentTime = DateTime.now().millisecondsSinceEpoch;
     if (currentTime - _lastStopTime < stopTimeGap) {
-      return;
+      return combinedText;
     }
     _lastStopTime = currentTime;
 
@@ -137,6 +136,12 @@ class EvenAI {
 
     print("recordOverByOS----startSendReply---pre------combinedText-------*$combinedText*---");
 
+    return combinedText;
+  }
+
+  // 收到眼镜端Even AI录音结束指令
+  Future<void> recordOverByOS() async {
+    await recordText();
     if (combinedText.isEmpty) {
       
       updateDynamicText("No Speech Recognized");
